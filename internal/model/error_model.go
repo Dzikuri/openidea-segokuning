@@ -21,4 +21,5 @@ var (
 	ErrUnauthorize       = errors.New("unauthorized")
 	ErrForbidden         = errors.New("forbidden")
 	ErrPasswordNotMatch  = errors.New("password not match")
+	ErrInternalDatabase  = errors.New("internal database error")
 )

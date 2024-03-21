@@ -1,6 +1,8 @@
 package helper
 
-import uuid "github.com/satori/go.uuid"
+import (
+	uuid "github.com/satori/go.uuid"
+)
 
 func GetUUID(input string) uuid.UUID {
 	id, err := uuid.FromString(input)
