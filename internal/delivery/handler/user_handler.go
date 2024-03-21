@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/Dzikuri/openidea-segokuning/internal/model"
@@ -114,4 +115,63 @@ func (h *Handler) UserLogin(c echo.Context) error {
 		Message: "User logged successfully",
 	})
 
+}
+
+func (h *Handler) UserLinkEmail(c echo.Context) error {
+
+	var request model.UserLinkEmailRequest
+	err := c.Bind(&request)
+	if err != nil {
+		return c.JSON(model.ErrResBadRequest.Code, model.ResponseError{
+			Code:    model.ErrResBadRequest.Code,
+			Message: model.ErrResBadRequest.Message,
+			Error:   err,
+		})
+	}
+
+	err = request.Validate()
+	if err != nil {
+		return c.JSON(model.ErrResBadRequest.Code, model.ResponseError{
+			Code:    model.ErrResBadRequest.Code,
+			Message: model.ErrResBadRequest.Message,
+			Error:   err,
+		})
+	}
+
+	usr, ok := c.Get("userId").(*model.UserResponse)
+	if ok {
+		request.Id = usr.Id
+	}
+
+	result, err := h.UseCase.UserLinkEmail(c.Request().Context(), &request)
+	if err != nil {
+
+		if errors.Is(err, model.ErrLinkEmailExists) {
+			return c.JSON(echo.ErrBadRequest.Code, model.ResponseError{
+				Code:    echo.ErrBadRequest.Code,
+				Message: model.ErrLinkEmailExists.Error(),
+				Error:   err,
+			})
+		}
+
+		if errors.Is(err, model.ErrUserAlreadyExists) {
+			return c.JSON(echo.ErrConflict.Code, model.ResponseError{
+				Code:    echo.ErrConflict.Code,
+				Message: model.ErrUserAlreadyExists.Error(),
+				Error:   err,
+			})
+		}
+
+		// TODO : handle error
+		return err
+
+	}
+
+	fmt.Println("result usecase: ", result)
+
+	return nil
+}
+
+func (h *Handler) UserLinkPhone(c echo.Context) error {
+	return nil
 }

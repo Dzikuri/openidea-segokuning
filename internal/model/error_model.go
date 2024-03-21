@@ -22,4 +22,5 @@ var (
 	ErrForbidden         = errors.New("forbidden")
 	ErrPasswordNotMatch  = errors.New("password not match")
 	ErrInternalDatabase  = errors.New("internal database error")
+	ErrLinkEmailExists   = errors.New("Bad Request")
 )

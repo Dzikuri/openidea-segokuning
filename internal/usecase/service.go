@@ -11,6 +11,9 @@ import (
 type UseCase interface {
 	UserRegister(ctx context.Context, request *model.UserAuthRequest) (*model.UserAuthResponse, error)
 	UserLogin(ctx context.Context, request *model.UserLoginRequest) (*model.UserAuthResponse, error)
+	UserLinkEmail(ctx context.Context, request *model.UserLinkEmailRequest) (*model.UserResponse, error)
+	UserLinkPhone(ctx context.Context, request *model.UserLinkPhoneRequest) (*model.UserResponse, error)
+	GetUserByID(ctx context.Context, id string) (*model.UserResponse, int, error)
 }
 
 type useCase struct {
