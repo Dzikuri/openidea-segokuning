@@ -16,7 +16,7 @@ type Response[T any] struct {
 type ResponseError struct {
 	Code    int    `json:"-"`
 	Message string `json:"message"`
-	Error   error
+	Error   error  `json:"error,omitempty"`
 }
 
 type MetaDataResponse struct {
