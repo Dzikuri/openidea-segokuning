@@ -187,3 +187,19 @@ func (u *useCase) UserLinkPhone(ctx context.Context, request *model.UserLinkPhon
 
 	return nil, nil
 }
+
+func (u *useCase) UserUpdateAccount(ctx context.Context, request *model.UserUpdateAccount) (*model.UserResponse, error) {
+
+	requestUpdate := new(model.UserResponse)
+
+	requestUpdate.Id = request.Id
+	requestUpdate.Name = request.Name
+	requestUpdate.ImageUrl = request.ImageUrl
+
+	_, err := u.UserRepository.UpdateUserData(ctx, *requestUpdate)
+	if condition := err != nil; condition {
+		return nil, err
+	}
+
+	return nil, nil
+}
