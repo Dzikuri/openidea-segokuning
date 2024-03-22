@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
 
 	"github.com/Dzikuri/openidea-segokuning/internal/helper"
@@ -149,28 +150,62 @@ func (r *UserRepository) FindById(ctx context.Context, id string) (res *model.Us
 
 func (r *UserRepository) UpdateUserData(ctx context.Context, request model.UserResponse) (*model.UserResponse, error) {
 
-	queryUpdate := fmt.Sprintf("UPDATE users SET")
+	queryUpdate := "UPDATE users SET"
+	var values []interface{}
 	counter := 1
+
 	if request.Email != "" {
-		if counter >= 1 {
-			queryUpdate = fmt.Sprintf(" email = $%d,", counter)
-		} else {
-			queryUpdate = fmt.Sprintf(" email = $%d", counter)
-		}
+		queryUpdate += fmt.Sprintf(" email = $%d,", counter)
+		values = append(values, request.Email)
 		counter++
 	}
 
-	fmt.Println(queryUpdate)
 	if request.Phone != "" {
-
+		queryUpdate += fmt.Sprintf(" phone = $%d,", counter)
+		values = append(values, request.Phone)
+		counter++
 	}
 
 	if request.Name != "" {
-
+		queryUpdate += fmt.Sprintf(" name = $%d,", counter)
+		values = append(values, request.Name)
+		counter++
 	}
 
 	if request.ImageUrl != "" {
+		queryUpdate += fmt.Sprintf(" image_url = $%d,", counter)
+		values = append(values, request.ImageUrl)
+		counter++
+	}
 
+	queryUpdate += fmt.Sprintf(" updated_at = $%d,", counter)
+	values = append(values, time.Now())
+	counter++
+
+	// Remove the last comma if present
+	if counter > 1 {
+		queryUpdate = queryUpdate[:len(queryUpdate)-1]
+	}
+
+	queryUpdate += fmt.Sprintf(" WHERE id = $%d", counter)
+	values = append(values, request.Id)
+
+	context, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	result, err := r.DB.ExecContext(context, queryUpdate, values...)
+	if err != nil {
+		return nil, errors.Wrap(model.ErrInternalDatabase, err.Error())
+	}
+
+	row, err := result.RowsAffected()
+
+	if err != nil {
+		return nil, errors.Wrap(echo.ErrInternalServerError, err.Error())
+	}
+
+	if row == 0 {
+		return nil, err
 	}
 
 	return nil, nil

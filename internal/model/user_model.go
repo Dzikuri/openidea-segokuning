@@ -56,7 +56,8 @@ type UserLinkEmailRequest struct {
 }
 
 type UserLinkPhoneRequest struct {
-	Phone string `json:"phone"`
+	Phone string    `json:"phone"`
+	Id    uuid.UUID `json:"id,omitempty"`
 }
 
 func (p UserLinkPhoneRequest) Validate() error {
