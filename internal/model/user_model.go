@@ -60,6 +60,19 @@ type UserLinkPhoneRequest struct {
 	Id    uuid.UUID `json:"id,omitempty"`
 }
 
+type UserUpdateAccount struct {
+	Id       uuid.UUID `json:"id,omitempty"`
+	Name     string    `json:"name"`
+	ImageUrl string    `json:"imageUrl"`
+}
+
+func (p UserUpdateAccount) Validate() error {
+	return validation.ValidateStruct(&p,
+		validation.Field(&p.Name, validation.Required, validation.Length(5, 50)),
+		validation.Field(&p.ImageUrl, validation.Required, is.URL),
+	)
+}
+
 func (p UserLinkPhoneRequest) Validate() error {
 	return validation.ValidateStruct(&p,
 		validation.Field(&p.Phone, validation.Required.Error(ErrResRequiredField.Message), validation.Match(regexp.MustCompile(`^\+[0-9]{7,13}$`))),
