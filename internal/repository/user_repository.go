@@ -3,9 +3,12 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
+	"net/http"
 	"time"
+
+	"github.com/labstack/echo/v4"
+	"github.com/pkg/errors"
 
 	"github.com/Dzikuri/openidea-segokuning/internal/helper"
 	"github.com/Dzikuri/openidea-segokuning/internal/model"
@@ -16,6 +19,8 @@ type RepositoryUser interface {
 	Register(ctx context.Context, user *model.UserAuthRequest) (*model.UserResponse, error)
 	FindByPhone(ctx context.Context, user *model.UserAuthRequest) (exists bool, res *model.UserResponse, err error)
 	FindByEmail(ctx context.Context, user *model.UserAuthRequest) (exists bool, res *model.UserResponse, err error)
+	FindById(ctx context.Context, id string) (res *model.UserResponse, code int, err error)
+	UpdateUserData(ctx context.Context, request model.UserResponse) (*model.UserResponse, error)
 }
 
 type UserRepository struct {
@@ -42,8 +47,6 @@ func (r *UserRepository) Register(ctx context.Context, user *model.UserAuthReque
             INSERT INTO users(phone, name, password, created_at, updated_at) VALUES($1, $2, $3, $4, $5) RETURNING id
         `
 	}
-
-	// queryCreate := fmt.Sprintf("INSERT INTO users(%s, name, password, created_at, updated_at) VALUES($1, $2, $3, $4, $5) RETURNING id", insertTo)
 
 	context, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
@@ -82,19 +85,20 @@ func (r *UserRepository) Register(ctx context.Context, user *model.UserAuthReque
 }
 
 func (r *UserRepository) FindByPhone(ctx context.Context, user *model.UserAuthRequest) (exists bool, res *model.UserResponse, err error) {
+	helper.LogPretty(user)
 	querySelect := fmt.Sprintf("SELECT id, email, phone, name, password, created_at, updated_at FROM users WHERE phone = $1")
 
 	context, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
-	result := new(model.UserResponse)
+	result := &model.UserResponse{}
+	row := r.DB.QueryRowContext(context, querySelect, user.CredentialValue)
 
-	errRowScan := r.DB.QueryRowContext(context, querySelect, user.CredentialValue).Scan(&result.Id, &result.Email, &result.Phone, &result.Password, &result.CreatedAt, &result.UpdatedAt)
-
+	errRowScan := row.Scan(&result.Id, &result.Email, &result.Phone, &result.Name, &result.Password, &result.CreatedAt, &result.UpdatedAt)
+	fmt.Println("err get data from database : ", errRowScan)
 	if errors.Is(errRowScan, sql.ErrNoRows) {
 		return false, nil, model.ErrUserNotFound
 	}
-
 	if errRowScan != nil {
 		return false, nil, err
 	}
@@ -112,6 +116,7 @@ func (r *UserRepository) FindByEmail(ctx context.Context, user *model.UserAuthRe
 	row := r.DB.QueryRowContext(context, querySelect, user.CredentialValue)
 
 	errRowScan := row.Scan(&result.Id, &result.Email, &result.Phone, &result.Name, &result.Password, &result.CreatedAt, &result.UpdatedAt)
+	fmt.Println("err get data from database : ", errRowScan)
 	if errors.Is(errRowScan, sql.ErrNoRows) {
 		return false, nil, model.ErrUserNotFound
 	}
@@ -120,4 +125,88 @@ func (r *UserRepository) FindByEmail(ctx context.Context, user *model.UserAuthRe
 	}
 
 	return true, result, nil
+}
+
+func (r *UserRepository) FindById(ctx context.Context, id string) (res *model.UserResponse, code int, err error) {
+
+	var user model.UserResponse
+
+	context, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	row := r.DB.QueryRowContext(context, "SELECT id, email, phone, name,  password, created_at, updated_at FROM users WHERE id = $1", id)
+
+	err = row.Scan(&user.Id, &user.Email, &user.Phone, &user.Name, &user.Password, &user.CreatedAt, &user.UpdatedAt)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, http.StatusNotFound, errors.Wrap(model.ErrUserNotFound, model.ErrUserNotFound.Error())
+		}
+		return nil, http.StatusInternalServerError, errors.Wrap(model.ErrInternalDatabase, err.Error())
+	}
+
+	return &user, http.StatusOK, nil
+}
+
+func (r *UserRepository) UpdateUserData(ctx context.Context, request model.UserResponse) (*model.UserResponse, error) {
+
+	queryUpdate := "UPDATE users SET"
+	var values []interface{}
+	counter := 1
+
+	if request.Email != "" {
+		queryUpdate += fmt.Sprintf(" email = $%d,", counter)
+		values = append(values, request.Email)
+		counter++
+	}
+
+	if request.Phone != "" {
+		queryUpdate += fmt.Sprintf(" phone = $%d,", counter)
+		values = append(values, request.Phone)
+		counter++
+	}
+
+	if request.Name != "" {
+		queryUpdate += fmt.Sprintf(" name = $%d,", counter)
+		values = append(values, request.Name)
+		counter++
+	}
+
+	if request.ImageUrl != "" {
+		queryUpdate += fmt.Sprintf(" image_url = $%d,", counter)
+		values = append(values, request.ImageUrl)
+		counter++
+	}
+
+	queryUpdate += fmt.Sprintf(" updated_at = $%d,", counter)
+	values = append(values, time.Now())
+	counter++
+
+	// Remove the last comma if present
+	if counter > 1 {
+		queryUpdate = queryUpdate[:len(queryUpdate)-1]
+	}
+
+	queryUpdate += fmt.Sprintf(" WHERE id = $%d", counter)
+	values = append(values, request.Id)
+
+	context, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	result, err := r.DB.ExecContext(context, queryUpdate, values...)
+	if err != nil {
+		return nil, errors.Wrap(model.ErrInternalDatabase, err.Error())
+	}
+
+	row, err := result.RowsAffected()
+
+	if err != nil {
+		return nil, errors.Wrap(echo.ErrInternalServerError, err.Error())
+	}
+
+	if row == 0 {
+		return nil, err
+	}
+
+	return nil, nil
 }

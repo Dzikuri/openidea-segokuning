@@ -6,6 +6,7 @@ import (
 	"time"
 
 	validation "github.com/itgelo/ozzo-validation/v4"
+	"github.com/itgelo/ozzo-validation/v4/is"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -14,6 +15,7 @@ type UserResponse struct {
 	Phone     string    `json:"phone,omitempty"`
 	Email     string    `json:"email,omitempty"`
 	Name      string    `json:"name,omitempty"`
+	ImageUrl  string    `json:"imageUrl,omitempty"`
 	Password  string    `json:"password"`
 	UpdatedAt time.Time `json:"updatedAt"`
 	CreatedAt time.Time `json:"createdAt"`
@@ -46,6 +48,28 @@ type UserLoginRequest struct {
 	CredentialType  UserCredentialType `json:"credentialType"`
 	CredentialValue string             `json:"credentialValue"`
 	Password        string             `json:"password"`
+}
+
+type UserLinkEmailRequest struct {
+	Email string    `json:"email"`
+	Id    uuid.UUID `json:"id,omitempty"`
+}
+
+type UserLinkPhoneRequest struct {
+	Phone string    `json:"phone"`
+	Id    uuid.UUID `json:"id,omitempty"`
+}
+
+func (p UserLinkPhoneRequest) Validate() error {
+	return validation.ValidateStruct(&p,
+		validation.Field(&p.Phone, validation.Required.Error(ErrResRequiredField.Message), validation.Match(regexp.MustCompile(`^\+[0-9]{7,13}$`))),
+	)
+}
+
+func (p UserLinkEmailRequest) Validate() error {
+	return validation.ValidateStruct(&p,
+		validation.Field(&p.Email, validation.Required.Error(ErrResRequiredField.Message), is.Email),
+	)
 }
 
 func (p UserAuthRequest) Validate() error {

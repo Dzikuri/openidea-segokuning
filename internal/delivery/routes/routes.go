@@ -30,9 +30,15 @@ func (c *RoutesConfig) Setup() {
 	})
 
 	c.SetupRouteAuth()
+	c.SetupRouteUser()
 }
 
 func (c *RoutesConfig) SetupRouteAuth() {
 	c.Echo.POST("/v1/user/register", c.Handler.UserRegister)
 	c.Echo.POST("/v1/user/login", c.Handler.UserLogin)
+}
+
+func (c *RoutesConfig) SetupRouteUser() {
+	c.Echo.POST("/v1/user/link/email", c.Handler.UserLinkEmail, c.Middleware.Authentication(true))
+	c.Echo.POST("/v1/user/link/phone", c.Handler.UserLinkPhone, c.Middleware.Authentication(true))
 }

@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS "public"."users" (
     "phone" varchar(15) UNIQUE DEFAULT '',
     "name" varchar(50) NOT NULL,
     "password" varchar(255) NOT NULL,
-    "image_url" text,
+    "image_url" text DEFAULT '',
     "created_at" timestamptz(6),
     "updated_at" timestamptz(6)
 );
