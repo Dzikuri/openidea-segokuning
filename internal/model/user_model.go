@@ -7,7 +7,6 @@ import (
 	"time"
 
 	validation "github.com/itgelo/ozzo-validation/v4"
-	"github.com/itgelo/ozzo-validation/v4/is"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -70,7 +69,8 @@ type UserUpdateAccount struct {
 func (p UserUpdateAccount) Validate() error {
 	return validation.ValidateStruct(&p,
 		validation.Field(&p.Name, validation.Required, validation.Length(5, 50)),
-		validation.Field(&p.ImageUrl, validation.Required, is.URL),
+		validation.Field(&p.ImageUrl, validation.Required, validation.Match(regexp.MustCompile(`^(https?|ftp):\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(\/\S*)?$
+`))),
 	)
 }
 
