@@ -1,6 +1,7 @@
 package model
 
 import (
+	"database/sql"
 	"errors"
 	"regexp"
 	"time"
@@ -11,14 +12,14 @@ import (
 )
 
 type UserResponse struct {
-	Id        uuid.UUID `json:"id,omitempty"`
-	Phone     string    `json:"phone,omitempty"`
-	Email     string    `json:"email,omitempty"`
-	Name      string    `json:"name,omitempty"`
-	ImageUrl  string    `json:"imageUrl,omitempty"`
-	Password  string    `json:"password"`
-	UpdatedAt time.Time `json:"updatedAt"`
-	CreatedAt time.Time `json:"createdAt"`
+	Id        uuid.UUID      `json:"id,omitempty"`
+	Phone     sql.NullString `json:"phone,omitempty"`
+	Email     sql.NullString `json:"email,omitempty"`
+	Name      string         `json:"name,omitempty"`
+	ImageUrl  string         `json:"imageUrl,omitempty"`
+	Password  string         `json:"password"`
+	UpdatedAt time.Time      `json:"updatedAt"`
+	CreatedAt time.Time      `json:"createdAt"`
 }
 
 type UserAuthResponse struct {
@@ -81,7 +82,7 @@ func (p UserLinkPhoneRequest) Validate() error {
 
 func (p UserLinkEmailRequest) Validate() error {
 	return validation.ValidateStruct(&p,
-		validation.Field(&p.Email, validation.Required.Error(ErrResRequiredField.Message), is.Email),
+		validation.Field(&p.Email, validation.Required.Error(ErrResRequiredField.Message), validation.Match(regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`))),
 	)
 }
 

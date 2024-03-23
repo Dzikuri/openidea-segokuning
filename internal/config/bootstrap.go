@@ -22,7 +22,9 @@ func Bootstrap(config *BootstrapConfig) {
 
 	userRepository := repository.NewUserRepository(config.DB)
 
-	UseCase := usecase.NewUseCase(*config.Logger, userRepository)
+	friendRepository := repository.NewFriendRepository(config.DB)
+
+	UseCase := usecase.NewUseCase(*config.Logger, userRepository, friendRepository)
 
 	middleware := middleware.NewMiddleware(config.Logger, UseCase)
 

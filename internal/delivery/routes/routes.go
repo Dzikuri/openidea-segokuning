@@ -31,6 +31,7 @@ func (c *RoutesConfig) Setup() {
 
 	c.SetupRouteAuth()
 	c.SetupRouteUser()
+	c.SetupRouteFriends()
 }
 
 func (c *RoutesConfig) SetupRouteAuth() {
@@ -39,7 +40,13 @@ func (c *RoutesConfig) SetupRouteAuth() {
 }
 
 func (c *RoutesConfig) SetupRouteUser() {
-	c.Echo.POST("/v1/user/link/email", c.Handler.UserLinkEmail, c.Middleware.Authentication(true))
+	c.Echo.POST("/v1/user/link", c.Handler.UserLinkEmail, c.Middleware.Authentication(true))
 	c.Echo.POST("/v1/user/link/phone", c.Handler.UserLinkPhone, c.Middleware.Authentication(true))
 	c.Echo.PATCH("/v1/user", c.Handler.UserUpdateAccount, c.Middleware.Authentication(true))
+}
+
+func (c *RoutesConfig) SetupRouteFriends() {
+	c.Echo.POST("/v1/friend", c.Handler.CreateFriend, c.Middleware.Authentication(true))
+	c.Echo.GET("/v1/friend", c.Handler.GetFriends, c.Middleware.Authentication(true))
+	c.Echo.DELETE("/v1/friend", c.Handler.DeleteFriend, c.Middleware.Authentication(true))
 }
