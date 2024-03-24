@@ -60,7 +60,7 @@ func JwtGenerateToken(request *model.UserResponse) (string, error) {
 	return t, err
 }
 
-func VerifyJwt(tokenString string, claims JwtCustomClaims, secret string) error {
+func VerifyJwt(tokenString string, claims jwt.Claims, secret string) error {
 	tkn, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (any, error) {
 		return []byte(JwtSecret()), nil
 	})

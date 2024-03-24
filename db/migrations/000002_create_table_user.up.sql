@@ -1,11 +1,11 @@
 -- NOTE Create table users
 CREATE TABLE IF NOT EXISTS "public"."users" (
     "id" uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
-    "email" varchar(255) UNIQUE DEFAULT '',
-    "phone" varchar(15) UNIQUE DEFAULT '',
+    "email" varchar(255) UNIQUE,
+    "phone" varchar(15) UNIQUE,
     "name" varchar(50) NOT NULL,
     "password" varchar(255) NOT NULL,
-    "image_url" text,
+    "image_url" text DEFAULT '',
     "created_at" timestamptz(6),
     "updated_at" timestamptz(6)
 );

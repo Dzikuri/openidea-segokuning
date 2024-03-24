@@ -16,9 +16,18 @@ var (
 )
 
 var (
-	ErrUserAlreadyExists = errors.New("User already exists")
-	ErrUserNotFound      = errors.New("User not found")
-	ErrUnauthorize       = errors.New("unauthorized")
-	ErrForbidden         = errors.New("forbidden")
-	ErrPasswordNotMatch  = errors.New("password not match")
+	ErrUserAlreadyExists   = errors.New("User already exists")
+	ErrUserNotFound        = errors.New("User not found")
+	ErrUnauthorize         = errors.New("unauthorized")
+	ErrForbidden           = errors.New("forbidden")
+	ErrPasswordNotMatch    = errors.New("password not match")
+	ErrInternalDatabase    = errors.New("internal database error")
+	ErrLinkEmailExists     = errors.New("Bad Request")
+	ErrAlreadyBeFriend     = errors.New("You already be friend")
+	ErrFriendAlreadyExists = errors.New("You already be friend")
+	ErrInvalidUserId       = errors.New("Invalid UserId")
+	ErrNotFriend           = errors.New("Not Friend")
+
+	ErrFileSizeNotValid  = errors.New("file size is not valid")
+	ErrExtensionNotValid = errors.New("file extension is not valid")
 )
