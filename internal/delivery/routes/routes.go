@@ -32,6 +32,7 @@ func (c *RoutesConfig) Setup() {
 	c.SetupRouteAuth()
 	c.SetupRouteUser()
 	c.SetupRouteFriends()
+	c.SetupRouteImageUpload()
 }
 
 func (c *RoutesConfig) SetupRouteAuth() {
@@ -49,4 +50,9 @@ func (c *RoutesConfig) SetupRouteFriends() {
 	c.Echo.POST("/v1/friend", c.Handler.CreateFriend, c.Middleware.Authentication(true))
 	c.Echo.GET("/v1/friend", c.Handler.GetFriends, c.Middleware.Authentication(true))
 	c.Echo.DELETE("/v1/friend", c.Handler.DeleteFriend, c.Middleware.Authentication(true))
+}
+
+func (c *RoutesConfig) SetupRouteImageUpload() {
+
+	c.Echo.POST("/v1/image", c.Handler.ImageUpload, c.Middleware.Authentication(true))
 }
