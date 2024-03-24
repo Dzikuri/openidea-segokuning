@@ -33,6 +33,7 @@ func (c *RoutesConfig) Setup() {
 	c.SetupRouteUser()
 	c.SetupRouteFriends()
 	c.SetupRouteImageUpload()
+	c.SetupRoutePost()
 }
 
 func (c *RoutesConfig) SetupRouteAuth() {
@@ -55,4 +56,10 @@ func (c *RoutesConfig) SetupRouteFriends() {
 func (c *RoutesConfig) SetupRouteImageUpload() {
 
 	c.Echo.POST("/v1/image", c.Handler.ImageUpload, c.Middleware.Authentication(true))
+}
+
+func (c *RoutesConfig) SetupRoutePost() {
+	c.Echo.POST("/v1/post", c.Handler.CreatePost, c.Middleware.Authentication(true))
+	c.Echo.GET("/v1/post", c.Handler.GetPosts, c.Middleware.Authentication(true))
+	c.Echo.POST("/v1/post/comment", c.Handler.CreatePostComment, c.Middleware.Authentication(true))
 }

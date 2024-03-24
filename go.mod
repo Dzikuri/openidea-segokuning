@@ -5,10 +5,12 @@ go 1.22.0
 require (
 	github.com/aws/aws-sdk-go v1.51.6
 	github.com/golang-jwt/jwt/v5 v5.2.1
+	github.com/google/uuid v1.6.0
 	github.com/itgelo/ozzo-validation v1.0.0
 	github.com/itgelo/ozzo-validation/v4 v4.3.1
 	github.com/jackc/pgx/v5 v5.5.5
 	github.com/labstack/echo/v4 v4.11.4
+	github.com/lib/pq v1.10.9
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.32.0
 	github.com/satori/go.uuid v1.2.0

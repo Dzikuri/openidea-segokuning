@@ -1,10 +1,11 @@
 package model
 
 import (
+	"errors"
+	"strconv"
 	"time"
 
 	validation "github.com/itgelo/ozzo-validation/v4"
-	"github.com/itgelo/ozzo-validation/v4/is"
 )
 
 type FriendRequest struct {
@@ -33,16 +34,24 @@ type FriendResponse struct {
 
 func (p FriendRequest) Validate() error {
 	return validation.ValidateStruct(&p,
-		validation.Field(&p.UserId, validation.Required, is.UUIDv4),
+		validation.Field(&p.UserId, validation.Required),
 	)
 }
 
 func (p GetFriendListRequest) Validate() error {
+	// Validate OnlyFriend as boolean
+	onlyFriendStr := strconv.FormatBool(p.OnlyFriend)
+	_, err := strconv.ParseBool(onlyFriendStr)
+	if err != nil {
+		return errors.New("OnlyFriend must be a valid boolean")
+	}
+
 	return validation.ValidateStruct(&p,
 		validation.Field(&p.Limit, validation.Min(0), validation.Max(100)),
 		validation.Field(&p.Offset, validation.Min(0)),
 		validation.Field(&p.OrderBy, validation.In("asc", "desc")),
 		validation.Field(&p.SortBy, validation.In("friendCount", "createdAt")),
-		// validation.Field(&p.OnlyFriend, validation.Min(0), validation.Max(1)),
+
+		// validation.Field(&p.OnlyFriend, validation.Bool),
 	)
 }
