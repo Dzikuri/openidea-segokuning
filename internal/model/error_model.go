@@ -27,4 +27,7 @@ var (
 	ErrFriendAlreadyExists = errors.New("You already be friend")
 	ErrInvalidUserId       = errors.New("Invalid UserId")
 	ErrNotFriend           = errors.New("Not Friend")
+
+	ErrFileSizeNotValid  = errors.New("file size is not valid")
+	ErrExtensionNotValid = errors.New("file extension is not valid")
 )
