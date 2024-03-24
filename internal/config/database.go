@@ -16,7 +16,7 @@ func NewDatabase() (*sql.DB, error) {
 	database := os.Getenv("DB_NAME")
 	databaseParam := os.Getenv("DB_PARAMS")
 
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s TimeZone=UTC %s", host, username, password, database, port, databaseParam)
+	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?%s", username, password, host, port, database, databaseParam)
 
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
