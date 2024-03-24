@@ -11,7 +11,7 @@ type FriendInterface interface {
 	// IsFriend(ctx context.Context, userID string, friendID string) (bool, error)
 	AddFriend(ctx context.Context, userID string, friendID string) (*model.FriendResponse, error)
 	RemoveFriend(ctx context.Context, userID string, friendID string) (*model.FriendResponse, error)
-	// GetFriendList(ctx context.Context, userID string) ([]model.FriendResponse, error)
+	GetFriendList(ctx context.Context, request model.GetFriendListRequest) (model.PaginateResponse[model.FriendResponse], error)
 }
 
 func (u *useCase) AddFriend(ctx context.Context, userID string, friendID string) (*model.FriendResponse, error) {
@@ -61,4 +61,38 @@ func (u *useCase) RemoveFriend(ctx context.Context, userID string, friendID stri
 	}
 
 	return result, nil
+}
+
+func (u *useCase) GetFriendList(ctx context.Context, request model.GetFriendListRequest) (model.PaginateResponse[model.FriendResponse], error) {
+
+	if request.Limit == 0 {
+		request.Limit = 5
+	}
+
+	if request.SortBy == "" {
+		request.SortBy = "createdAt"
+	}
+
+	if request.OrderBy == "" {
+		request.OrderBy = "desc"
+	}
+
+	result, meta, err := u.FriendRepository.FindAllFriend(ctx, request)
+	if err != nil {
+		return model.PaginateResponse[model.FriendResponse]{
+			Data: []model.FriendResponse{},
+			Meta: model.MetaDataResponse{
+				Total:  0,
+				Limit:  request.Limit,
+				Offset: request.Offset,
+			},
+			Message: "Ok",
+		}, err
+	}
+
+	return model.PaginateResponse[model.FriendResponse]{
+		Data:    result,
+		Meta:    meta,
+		Message: "Ok",
+	}, nil
 }

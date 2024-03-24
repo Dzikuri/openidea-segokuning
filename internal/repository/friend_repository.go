@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -19,6 +20,7 @@ type RepositoryFriend interface {
 	AddFriend(ctx context.Context, request model.FriendRequest) (*model.FriendResponse, error)
 	CheckAlreadyFriend(ctx context.Context, userID string, friendID string) (*model.FriendResponse, int, error)
 	RemoveFriend(ctx context.Context, userID string, friendID string) (*model.FriendResponse, error)
+	FindAllFriend(ctx context.Context, request model.GetFriendListRequest) ([]model.FriendResponse, model.MetaDataResponse, error)
 }
 
 func NewFriendRepository(db *sql.DB) RepositoryFriend {
@@ -147,4 +149,53 @@ func (f *FriendRepository) CheckAlreadyFriend(ctx context.Context, userID string
 	}
 
 	return nil, 0, nil
+}
+
+func (f *FriendRepository) FindAllFriend(ctx context.Context, request model.GetFriendListRequest) ([]model.FriendResponse, model.MetaDataResponse, error) {
+
+	friends := make([]model.FriendResponse, 0)
+
+	queryCondition := fmt.Sprintf(" WHERE users.id <> '%s' ", request.UserId)
+	queryJoin := ""
+	if request.OnlyFriend == true {
+		queryCondition += fmt.Sprintf(" AND friends.user_id = '%s' ", request.UserId)
+
+		// NOTE Using Join
+		queryJoin += " INNER JOIN friends ON users.id = friends.follow_user_id "
+	}
+
+	if request.Search != "" {
+		queryCondition += fmt.Sprintf(" AND users.name LIKE '%%%s%%' ", request.Search)
+	}
+
+	// NOTE Using Join
+	queryGet := fmt.Sprintf("SELECT users.id, users.name, users.image_url, users.total_friend, users.created_at FROM users %s %s LIMIT $1 OFFSET $2", queryJoin, queryCondition)
+
+	context, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	rows, err := f.DB.QueryContext(context, queryGet, request.Limit, request.Offset)
+	if err != nil {
+		return nil, model.MetaDataResponse{}, err
+	}
+
+	totalRows := 0
+	for rows.Next() {
+		var friend model.FriendResponse
+		err = rows.Scan(&friend.UserId, &friend.Name, &friend.ImageUrl, &friend.FriendCount, &friend.CreatedAt)
+		if err != nil {
+			return nil, model.MetaDataResponse{}, err
+		}
+
+		friends = append(friends, friend)
+
+		totalRows++
+	}
+	defer rows.Close()
+
+	return friends, model.MetaDataResponse{
+		Limit:  request.Limit,
+		Offset: request.Offset,
+		Total:  totalRows,
+	}, nil
 }

@@ -105,8 +105,50 @@ func (h *Handler) CreateFriend(c echo.Context) error {
 }
 
 func (h *Handler) GetFriends(c echo.Context) error {
+	var request model.GetFriendListRequest
 
-	return nil
+	err := c.Bind(&request)
+	if err != nil {
+		return c.JSON(model.ErrResBadRequest.Code, model.ResponseError{
+			Code:    model.ErrResBadRequest.Code,
+			Message: model.ErrResBadRequest.Message,
+			Error:   err,
+		})
+	}
+
+	err = request.Validate()
+	if err != nil {
+		return c.JSON(model.ErrResBadRequest.Code, model.ResponseError{
+			Code:    model.ErrResBadRequest.Code,
+			Message: model.ErrResBadRequest.Message,
+			Error:   err,
+		})
+	}
+
+	usr, ok := c.Get("userId").(*model.UserResponse)
+	if ok {
+		request.UserId = usr.Id.String()
+	}
+
+	if !ok {
+		return c.JSON(model.ErrResBadRequest.Code, model.ResponseError{
+			Code:    model.ErrResBadRequest.Code,
+			Message: model.ErrResBadRequest.Message,
+			Error:   err,
+		})
+	}
+
+	result, err := h.UseCase.GetFriendList(c.Request().Context(), request)
+
+	if err != nil {
+		return c.JSON(echo.ErrInternalServerError.Code, model.ResponseError{
+			Code:    echo.ErrInternalServerError.Code,
+			Message: echo.ErrInternalServerError.Error(),
+			Error:   err,
+		})
+	}
+
+	return c.JSON(http.StatusOK, result)
 }
 
 func (h *Handler) DeleteFriend(c echo.Context) error {
