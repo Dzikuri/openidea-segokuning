@@ -2,11 +2,22 @@ package usecase
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
 
 	"github.com/Dzikuri/openidea-segokuning/internal/helper"
 	"github.com/Dzikuri/openidea-segokuning/internal/model"
 	uuid "github.com/satori/go.uuid"
 )
+
+type UserInterface interface {
+	UserRegister(ctx context.Context, request *model.UserAuthRequest) (*model.UserAuthResponse, error)
+	UserLogin(ctx context.Context, request *model.UserLoginRequest) (*model.UserAuthResponse, error)
+	GetUserByID(ctx context.Context, id string) (*model.UserResponse, int, error)
+	UserLinkEmail(ctx context.Context, request *model.UserLinkEmailRequest) (*model.UserResponse, error)
+	UserLinkPhone(ctx context.Context, request *model.UserLinkPhoneRequest) (*model.UserResponse, error)
+	UserUpdateAccount(ctx context.Context, request *model.UserUpdateAccount) (*model.UserResponse, error)
+}
 
 func (u *useCase) UserRegister(ctx context.Context, request *model.UserAuthRequest) (*model.UserAuthResponse, error) {
 	// hash password before insert to database
@@ -34,8 +45,8 @@ func (u *useCase) UserRegister(ctx context.Context, request *model.UserAuthReque
 	// return response
 
 	return &model.UserAuthResponse{
-		Phone:       result.Phone,
-		Email:       result.Email,
+		Phone:       result.Phone.String,
+		Email:       result.Email.String,
 		Name:        result.Name,
 		AccessToken: token,
 	}, nil
@@ -83,8 +94,8 @@ func (u *useCase) UserLogin(ctx context.Context, request *model.UserLoginRequest
 	}
 	// return response
 	return &model.UserAuthResponse{
-		Phone:       result.Phone,
-		Email:       result.Email,
+		Phone:       result.Phone.String,
+		Email:       result.Email.String,
 		Name:        result.Name,
 		AccessToken: token,
 	}, nil
@@ -106,15 +117,14 @@ func (u *useCase) GetUserByID(ctx context.Context, id string) (*model.UserRespon
 }
 
 func (u *useCase) UserLinkEmail(ctx context.Context, request *model.UserLinkEmailRequest) (*model.UserResponse, error) {
-
 	// Find By Id
 	resUserId, _, err := u.UserRepository.FindById(ctx, request.Id.String())
-
+	fmt.Println(err)
 	if err != nil {
 		return nil, err
 	}
 
-	if resUserId.Email != "" {
+	if resUserId.Email.Valid {
 		return nil, model.ErrResBadRequest.Error
 	}
 
@@ -137,7 +147,7 @@ func (u *useCase) UserLinkEmail(ctx context.Context, request *model.UserLinkEmai
 	requestUpdate := new(model.UserResponse)
 
 	requestUpdate.Id = request.Id
-	requestUpdate.Email = request.Email
+	requestUpdate.Email = sql.NullString{request.Email, true}
 
 	_, err = u.UserRepository.UpdateUserData(ctx, *requestUpdate)
 	if condition := err != nil; condition {
@@ -148,6 +158,7 @@ func (u *useCase) UserLinkEmail(ctx context.Context, request *model.UserLinkEmai
 }
 
 func (u *useCase) UserLinkPhone(ctx context.Context, request *model.UserLinkPhoneRequest) (*model.UserResponse, error) {
+
 	// Find By Id
 	resUserId, _, err := u.UserRepository.FindById(ctx, request.Id.String())
 
@@ -155,7 +166,7 @@ func (u *useCase) UserLinkPhone(ctx context.Context, request *model.UserLinkPhon
 		return nil, err
 	}
 
-	if resUserId.Phone != "" {
+	if resUserId.Phone.Valid {
 		return nil, model.ErrResBadRequest.Error
 	}
 
@@ -178,14 +189,16 @@ func (u *useCase) UserLinkPhone(ctx context.Context, request *model.UserLinkPhon
 	requestUpdate := new(model.UserResponse)
 
 	requestUpdate.Id = request.Id
-	requestUpdate.Phone = request.Phone
+	requestUpdate.Phone = sql.NullString{request.Phone, true}
 
 	_, err = u.UserRepository.UpdateUserData(ctx, *requestUpdate)
 	if condition := err != nil; condition {
 		return nil, err
 	}
 
-	return nil, nil
+	return &model.UserResponse{
+		Phone: requestUpdate.Phone,
+	}, nil
 }
 
 func (u *useCase) UserUpdateAccount(ctx context.Context, request *model.UserUpdateAccount) (*model.UserResponse, error) {

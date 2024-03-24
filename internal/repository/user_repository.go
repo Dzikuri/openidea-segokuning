@@ -35,6 +35,7 @@ func NewUserRepository(db *sql.DB) RepositoryUser {
 
 func (r *UserRepository) Register(ctx context.Context, user *model.UserAuthRequest) (*model.UserResponse, error) {
 
+	helper.LogPretty(user)
 	queryCreate := ""
 	if user.CredentialType == model.Email {
 		queryCreate = `
@@ -50,10 +51,16 @@ func (r *UserRepository) Register(ctx context.Context, user *model.UserAuthReque
 
 	context, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
-
+	fmt.Println(queryCreate)
+	fmt.Println(user.CredentialValue)
+	fmt.Println(user.Name)
+	fmt.Println(user.Password)
+	fmt.Println(time.Now())
+	fmt.Println(time.Now())
 	result := r.DB.QueryRowContext(context, queryCreate, &user.CredentialValue, &user.Name, &user.Password, time.Now(), time.Now())
 	var id = ""
 	err := result.Scan(&id)
+	fmt.Println(err)
 	var pgErr *pgconn.PgError
 	if err != nil {
 		if errors.As(err, &pgErr) {
@@ -69,13 +76,13 @@ func (r *UserRepository) Register(ctx context.Context, user *model.UserAuthReque
 
 	res := new(model.UserResponse)
 	if user.CredentialType == model.Email {
-		res.Email = user.CredentialValue
-		res.Phone = ""
+		res.Email = sql.NullString{user.CredentialValue, true}
+		res.Phone = sql.NullString{}
 	}
 
 	if user.CredentialType == model.Phone {
-		res.Phone = user.CredentialValue
-		res.Email = ""
+		res.Phone = sql.NullString{user.CredentialValue, true}
+		res.Email = sql.NullString{}
 	}
 
 	res.Id = helper.GetUUID(id)
@@ -154,13 +161,13 @@ func (r *UserRepository) UpdateUserData(ctx context.Context, request model.UserR
 	var values []interface{}
 	counter := 1
 
-	if request.Email != "" {
+	if request.Email.Valid {
 		queryUpdate += fmt.Sprintf(" email = $%d,", counter)
 		values = append(values, request.Email)
 		counter++
 	}
 
-	if request.Phone != "" {
+	if request.Phone.Valid {
 		queryUpdate += fmt.Sprintf(" phone = $%d,", counter)
 		values = append(values, request.Phone)
 		counter++

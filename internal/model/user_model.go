@@ -1,24 +1,24 @@
 package model
 
 import (
+	"database/sql"
 	"errors"
 	"regexp"
 	"time"
 
 	validation "github.com/itgelo/ozzo-validation/v4"
-	"github.com/itgelo/ozzo-validation/v4/is"
 	uuid "github.com/satori/go.uuid"
 )
 
 type UserResponse struct {
-	Id        uuid.UUID `json:"id,omitempty"`
-	Phone     string    `json:"phone,omitempty"`
-	Email     string    `json:"email,omitempty"`
-	Name      string    `json:"name,omitempty"`
-	ImageUrl  string    `json:"imageUrl,omitempty"`
-	Password  string    `json:"password"`
-	UpdatedAt time.Time `json:"updatedAt"`
-	CreatedAt time.Time `json:"createdAt"`
+	Id        uuid.UUID      `json:"id,omitempty"`
+	Phone     sql.NullString `json:"phone,omitempty"`
+	Email     sql.NullString `json:"email,omitempty"`
+	Name      string         `json:"name,omitempty"`
+	ImageUrl  string         `json:"imageUrl,omitempty"`
+	Password  string         `json:"password"`
+	UpdatedAt time.Time      `json:"updatedAt"`
+	CreatedAt time.Time      `json:"createdAt"`
 }
 
 type UserAuthResponse struct {
@@ -69,7 +69,8 @@ type UserUpdateAccount struct {
 func (p UserUpdateAccount) Validate() error {
 	return validation.ValidateStruct(&p,
 		validation.Field(&p.Name, validation.Required, validation.Length(5, 50)),
-		validation.Field(&p.ImageUrl, validation.Required, is.URL),
+		validation.Field(&p.ImageUrl, validation.Required, validation.Match(regexp.MustCompile(`^(https?|ftp):\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(\/\S*)?$
+`))),
 	)
 }
 
@@ -81,7 +82,7 @@ func (p UserLinkPhoneRequest) Validate() error {
 
 func (p UserLinkEmailRequest) Validate() error {
 	return validation.ValidateStruct(&p,
-		validation.Field(&p.Email, validation.Required.Error(ErrResRequiredField.Message), is.Email),
+		validation.Field(&p.Email, validation.Required.Error(ErrResRequiredField.Message), validation.Match(regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`))),
 	)
 }
 
