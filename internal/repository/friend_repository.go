@@ -168,9 +168,25 @@ func (f *FriendRepository) FindAllFriend(ctx context.Context, request model.GetF
 		queryCondition += fmt.Sprintf(" AND users.name LIKE '%%%s%%' ", request.Search)
 	}
 
-	// NOTE Using Join
-	queryGet := fmt.Sprintf("SELECT users.id, users.name, users.image_url, users.total_friend, users.created_at FROM users %s %s LIMIT $1 OFFSET $2", queryJoin, queryCondition)
+	orderBy := "DESC"
+	if request.OrderBy != "" {
+		orderBy = request.OrderBy
+	}
 
+	sortBy := "created_at"
+	if request.SortBy != "" {
+		if request.SortBy == "friendCount" {
+			sortBy = "total_friend"
+		} else {
+			sortBy = "created_at"
+		}
+	}
+
+	querySortBy := fmt.Sprintf(" ORDER BY %s %s ", sortBy, orderBy)
+
+	// NOTE Using Join
+	queryGet := fmt.Sprintf("SELECT users.id, users.name, users.image_url, users.total_friend, users.created_at FROM users %s %s %s LIMIT $1 OFFSET $2", queryJoin, queryCondition, querySortBy)
+	fmt.Println(queryGet)
 	context, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
@@ -182,11 +198,16 @@ func (f *FriendRepository) FindAllFriend(ctx context.Context, request model.GetF
 	totalRows := 0
 	for rows.Next() {
 		var friend model.FriendResponse
-		err = rows.Scan(&friend.UserId, &friend.Name, &friend.ImageUrl, &friend.FriendCount, &friend.CreatedAt)
+
+		var createdAt time.Time
+
+		err = rows.Scan(&friend.UserId, &friend.Name, &friend.ImageUrl, &friend.FriendCount, &createdAt)
 		if err != nil {
 			return nil, model.MetaDataResponse{}, err
 		}
 
+		// friend.CreatedAt = createdAt.Format("")
+		friend.CreatedAt, _ = time.Parse(time.RFC3339, friend.CreatedAt.String())
 		friends = append(friends, friend)
 
 		totalRows++
