@@ -35,7 +35,6 @@ func NewUserRepository(db *sql.DB) RepositoryUser {
 
 func (r *UserRepository) Register(ctx context.Context, user *model.UserAuthRequest) (*model.UserResponse, error) {
 
-	helper.LogPretty(user)
 	queryCreate := ""
 	if user.CredentialType == model.Email {
 		queryCreate = `
