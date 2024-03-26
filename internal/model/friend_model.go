@@ -1,8 +1,6 @@
 package model
 
 import (
-	"errors"
-	"strconv"
 	"time"
 
 	validation "github.com/itgelo/ozzo-validation/v4"
@@ -39,18 +37,12 @@ func (p FriendRequest) Validate() error {
 }
 
 func (p GetFriendListRequest) Validate() error {
-	// Validate OnlyFriend as boolean
-	onlyFriendStr := strconv.FormatBool(p.OnlyFriend)
-	_, err := strconv.ParseBool(onlyFriendStr)
-	if err != nil {
-		return errors.New("OnlyFriend must be a valid boolean")
-	}
 
 	return validation.ValidateStruct(&p,
-		validation.Field(&p.Limit, validation.Min(0), validation.Max(100)),
+		validation.Field(&p.Limit, validation.Min(0)),
 		validation.Field(&p.Offset, validation.Min(0)),
 		validation.Field(&p.OrderBy, validation.In("asc", "desc")),
-		validation.Field(&p.SortBy, validation.In("friendCount", "createdAt")),
+		// validation.Field(&p.SortBy, validation.In("friendCount", "createdAt")),
 
 		// validation.Field(&p.OnlyFriend, validation.Bool),
 	)

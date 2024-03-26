@@ -186,7 +186,6 @@ func (f *FriendRepository) FindAllFriend(ctx context.Context, request model.GetF
 
 	// NOTE Using Join
 	queryGet := fmt.Sprintf("SELECT users.id, users.name, users.image_url, users.total_friend, users.created_at FROM users %s %s %s LIMIT $1 OFFSET $2", queryJoin, queryCondition, querySortBy)
-	fmt.Println(queryGet)
 	context, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 

@@ -2,3 +2,4 @@
 .env
 /build/tmp/*
 *.code-workspace
+*.pem
