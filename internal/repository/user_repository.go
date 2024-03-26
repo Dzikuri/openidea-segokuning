@@ -51,16 +51,9 @@ func (r *UserRepository) Register(ctx context.Context, user *model.UserAuthReque
 
 	context, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
-	fmt.Println(queryCreate)
-	fmt.Println(user.CredentialValue)
-	fmt.Println(user.Name)
-	fmt.Println(user.Password)
-	fmt.Println(time.Now())
-	fmt.Println(time.Now())
 	result := r.DB.QueryRowContext(context, queryCreate, &user.CredentialValue, &user.Name, &user.Password, time.Now(), time.Now())
 	var id = ""
 	err := result.Scan(&id)
-	fmt.Println(err)
 	var pgErr *pgconn.PgError
 	if err != nil {
 		if errors.As(err, &pgErr) {

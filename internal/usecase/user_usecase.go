@@ -3,7 +3,6 @@ package usecase
 import (
 	"context"
 	"database/sql"
-	"fmt"
 
 	"github.com/Dzikuri/openidea-segokuning/internal/helper"
 	"github.com/Dzikuri/openidea-segokuning/internal/model"
@@ -119,7 +118,6 @@ func (u *useCase) GetUserByID(ctx context.Context, id string) (*model.UserRespon
 func (u *useCase) UserLinkEmail(ctx context.Context, request *model.UserLinkEmailRequest) (*model.UserResponse, error) {
 	// Find By Id
 	resUserId, _, err := u.UserRepository.FindById(ctx, request.Id.String())
-	fmt.Println(err)
 	if err != nil {
 		return nil, err
 	}
